@@ -44,11 +44,17 @@ jobs:
           CUSTIMOO_GRAPH_CLIENT_ID: ${{ secrets.CUSTIMOO_GRAPH_CLIENT_ID }}
           CUSTIMOO_GRAPH_CLIENT_SECRET: ${{ secrets.CUSTIMOO_GRAPH_CLIENT_SECRET }}
           AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
-        run: python3 scripts/html_report.py
+        run: |
+          set +e
+          python3 scripts/html_report.py
+          echo "EXIT_CODE=$?"
+          ls -la report.html 2>/dev/null || echo "No report.html generated"
+          exit 0
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to fly.io
+        if: hashFiles('report.html') != ''
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: flyctl deploy -a custimoo-defect-report-lars --remote-only
