@@ -128,12 +128,13 @@ def generate(defects_only=False):
                 first_fu_month[n] = received_dt
 
     order_nums_list = list(all_order_nums)
-    qs = ",".join(["%s"] * len(order_nums_list))
+    if order_nums_list:
+        qs = ",".join(["%s"] * len(order_nums_list))
 
-    cur.execute("SELECT o.order_no, o.created_at, COALESCE(oi.factory_name, '(unknown)') as raw_factory FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id WHERE o.order_no IN (%s)" % qs, order_nums_list)
-
-    order_map = {}
-    for r in cur.fetchall():
+        cur.execute("SELECT o.order_no, o.created_at, COALESCE(oi.factory_name, '(unknown)') as raw_factory FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id WHERE o.order_no IN (%s)" % qs, order_nums_list)
+        rows = cur.fetchall()
+    else:
+        rows = []
         ono = str(r[0])
         month = str(r[1])[:7] if r[1] else "?"
         order_map[ono] = {'month': month, 'factory': norm_factory(r[2])}
