@@ -135,6 +135,9 @@ def generate(defects_only=False):
         rows = cur.fetchall()
     else:
         rows = []
+
+    order_map = {}
+    for r in rows:
         ono = str(r[0])
         month = str(r[1])[:7] if r[1] else "?"
         order_map[ono] = {'month': month, 'factory': norm_factory(r[2])}
