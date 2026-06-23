@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 8 * * 1-5'
-    - cron: '0 16 * * 1-5'
+    - cron: '0 8,16 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -13,10 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install pymysql azure-storage-blob requests
@@ -48,5 +43,5 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          cp report.html /usr/share/nginx/html/index.html
+          cp report.html /usr/share/nginx/html/index.html || true
           flyctl deploy -a custimoo-defect-report-lars --remote-only
