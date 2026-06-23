@@ -40,8 +40,4 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to fly.io
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: |
-          cp report.html /usr/share/nginx/html/index.html || true
-          flyctl deploy -a custimoo-defect-report-lars --remote-only
+        run: flyctl deploy -a custimoo-defect-report-lars --remote-only
