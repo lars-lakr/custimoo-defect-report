@@ -15,4 +15,4 @@ RUN chmod +x /app/server.py
 
 EXPOSE 8080
 
-CMD /app/server.py
+CMD python3 /app/server.py
