@@ -60,6 +60,10 @@ echo "${SCHED} root /app/cron-regenerate.sh > /dev/null 2>&1" > /etc/cron.d/repo
 chmod 0644 /etc/cron.d/report-regeneration
 service cron start 2>&1 || true
 
+# Start API server in background
+echo "[fly] Starting API server on port 8080..."
+python3 /app/server.py &
+
 # Serve nginx
 echo "[fly] Starting nginx..."
 nginx -g "daemon off;"

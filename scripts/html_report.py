@@ -1001,6 +1001,7 @@ ORDERS_JSON_SAFE = ORDERS_JSON.replace('<', '\\u003C').replace('>', '\\u003E')
 conn.close()
 
 MONTH_KEYS = json.dumps(all_months_sorted)
+generation_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
 html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1088,6 +1089,14 @@ html = f"""<!DOCTYPE html>
 </style>
 </head>
 <body>
+<div id="refresh-bar" style="text-align:center;padding:8px 16px;background:#1a1a2e;border-bottom:1px solid #2a2a4e;font-size:13px;color:#aaa;">
+  <span id="last-update">Generated: {generation_time}</span>
+  <button id="refresh-btn" onclick="doRefresh()" style="margin-left:12px;padding:4px 16px;background:#0f3460;color:white;border:1px solid #16213e;border-radius:4px;cursor:pointer;">Refresh Report</button>
+  <span id="refresh-msg" style="margin-left:10px;"></span>
+</div>
+<script>
+async function doRefresh(){{var b=document.getElementById('refresh-btn'),m=document.getElementById('refresh-msg');b.disabled=!0;b.textContent='Refreshing...';m.textContent='';try{{var r=await fetch('/api/refresh'),d=await r.json();if(d.ok){{m.textContent='✓ '+d.message;m.style.color='#4ecca3';var t=0,c=setInterval(async()=>{{var s=await fetch('/api/status'),sd=await s.json();if(sd.conclusion==='success'){{clearInterval(c);location.reload();}}if(++t>60)clearInterval(c);}},2e3)}}else{{m.textContent='✗ '+(d.error||'Failed');m.style.color='#e94560'}}}}catch(e){{m.textContent='✗ Network error';m.style.color='#e94560'}}b.disabled=!1;b.textContent='Refresh Report'}}
+</script>
 <div class="wrap">
   <div class="hero">
     <h1>Custimoo — Defect Report</h1>
