@@ -3,6 +3,7 @@
 import http.server
 import json
 import os
+import sys
 import urllib.request
 import socketserver
 
@@ -92,5 +93,11 @@ class H(http.server.BaseHTTPRequestHandler):
         pass
 
 print("Serving on port", PORT, flush=True)
-httpd = socketserver.TCPServer(("0.0.0.0", PORT), H)
-httpd.serve_forever()
+try:
+    httpd = socketserver.TCPServer(("0.0.0.0", PORT), H)
+    httpd.serve_forever()
+except Exception as e:
+    print("FATAL:", e, flush=True)
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
