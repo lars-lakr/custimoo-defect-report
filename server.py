@@ -11,6 +11,14 @@ PORT = int(os.environ.get("PORT", 8080))
 DQC_URL = os.environ.get("DQC_EVENTS_URL", "https://dqc-dashboard-custimoo.fly.dev/api/events")
 DQC_USER = os.environ.get("DQC_DASH_USER", "")
 DQC_PASS = os.environ.get("DQC_DASH_PASSWORD", "")
+REASON_KEYS = ("rejection_reason", "reject_reason", "reason", "failure_reason", "qc_reason", "notes", "message")
+
+def event_reason(e):
+    for k in REASON_KEYS:
+        v = e.get(k)
+        if v is not None and str(v).strip():
+            return str(v).strip()
+    return ""
 
 DQC_PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,12 +31,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div id="msg" class="muted"></div>
 <div class="grid"><div class="card kpi"><div class="label">Total audits</div><div class="value" id="total">–</div></div><div class="card kpi"><div class="label">PASSED</div><div class="value passed" id="passed">–</div></div><div class="card kpi"><div class="label">REJECTED</div><div class="value rejected" id="rejected">–</div></div><div class="card kpi"><div class="label">Users</div><div class="value" id="users">–</div></div></div>
 <div class="card"><h3>Per-user count</h3><table><thead><tr><th>User</th><th class="right">Audits</th></tr></thead><tbody id="userBody"></tbody></table></div>
-<div class="card"><h3>All runs</h3><table><thead><tr><th>Date</th><th>User</th><th>Order</th><th>Verdict</th><th>Version</th><th>Timestamp UTC</th></tr></thead><tbody id="runBody"></tbody></table></div>
+<div class="card"><h3>All runs</h3><table><thead><tr><th>Date</th><th>User</th><th>Order</th><th>Verdict</th><th>Rejection reason</th><th>Version</th><th>Timestamp UTC</th></tr></thead><tbody id="runBody"></tbody></table></div>
 </div><script>
 function qs(){const p=new URLSearchParams(); const f=document.getElementById('from').value,t=document.getElementById('to').value; if(f)p.set('from',f); if(t)p.set('to',t); return p.toString()?('?'+p.toString()):''}
 function download(path){location.href=path+qs()}
 async function loadData(){document.getElementById('msg').textContent='Loading…'; try{const r=await fetch('/api/dqc/events'+qs()); const d=await r.json(); if(!r.ok) throw new Error(d.error||r.statusText); render(d)}catch(e){document.getElementById('msg').innerHTML='<span class="error">'+e.message+'</span>'}}
-function render(d){const ev=d.events||[]; document.getElementById('generated').textContent='API generated: '+(d.generated_at||'n/a')+' · '+ev.length+' rows'; document.getElementById('msg').textContent=d.stale_error?('Warning: '+d.stale_error):''; const vc={PASSED:0,REJECTED:0}; const uc={}; ev.forEach(e=>{vc[(e.verdict||'').toUpperCase()]=(vc[(e.verdict||'').toUpperCase()]||0)+1; uc[e.user||'(unknown)']=(uc[e.user||'(unknown)']||0)+1}); document.getElementById('total').textContent=ev.length; document.getElementById('passed').textContent=vc.PASSED||0; document.getElementById('rejected').textContent=vc.REJECTED||0; document.getElementById('users').textContent=Object.keys(uc).length; document.getElementById('userBody').innerHTML=Object.entries(uc).sort((a,b)=>b[1]-a[1]).map(([u,c])=>`<tr><td>${u}</td><td class="right">${c}</td></tr>`).join('')||'<tr><td colspan=2>No users</td></tr>'; document.getElementById('runBody').innerHTML=ev.map(e=>`<tr><td>${(e.ts||'').slice(0,10)}</td><td>${e.user||''}</td><td>${e.order||''}</td><td><span class="pill ${(e.verdict||'').toUpperCase()}">${e.verdict||''}</span></td><td>${e.plugin_version||''}</td><td>${e.ts||''}</td></tr>`).join('')||'<tr><td colspan=6>No audits logged</td></tr>'}
+function render(d){const ev=d.events||[]; document.getElementById('generated').textContent='API generated: '+(d.generated_at||'n/a')+' · '+ev.length+' rows'; document.getElementById('msg').textContent=d.stale_error?('Warning: '+d.stale_error):''; const vc={PASSED:0,REJECTED:0}; const uc={}; const reason=e=>(e.rejection_reason||e.reject_reason||e.reason||e.failure_reason||e.qc_reason||e.notes||e.message||''); ev.forEach(e=>{vc[(e.verdict||'').toUpperCase()]=(vc[(e.verdict||'').toUpperCase()]||0)+1; uc[e.user||'(unknown)']=(uc[e.user||'(unknown)']||0)+1}); document.getElementById('total').textContent=ev.length; document.getElementById('passed').textContent=vc.PASSED||0; document.getElementById('rejected').textContent=vc.REJECTED||0; document.getElementById('users').textContent=Object.keys(uc).length; document.getElementById('userBody').innerHTML=Object.entries(uc).sort((a,b)=>b[1]-a[1]).map(([u,c])=>`<tr><td>${u}</td><td class="right">${c}</td></tr>`).join('')||'<tr><td colspan=2>No users</td></tr>'; document.getElementById('runBody').innerHTML=ev.map(e=>`<tr><td>${(e.ts||'').slice(0,10)}</td><td>${e.user||''}</td><td>${e.order||''}</td><td><span class="pill ${(e.verdict||'').toUpperCase()}">${e.verdict||''}</span></td><td>${reason(e)}</td><td>${e.plugin_version||''}</td><td>${e.ts||''}</td></tr>`).join('')||'<tr><td colspan=7>No audits logged</td></tr>'}
 loadData();
 </script></body></html>"""
 
@@ -107,8 +115,8 @@ class H(http.server.SimpleHTTPRequestHandler):
     def _dqc_csv(self):
         try:
             data = self._fetch_dqc(); out = io.StringIO(); w = csv.writer(out)
-            w.writerow(["date", "user", "order", "verdict", "timestamp_utc", "plugin_version"])
-            for e in data.get("events", []): w.writerow([(e.get("ts") or "")[:10], e.get("user",""), e.get("order",""), e.get("verdict",""), e.get("ts",""), e.get("plugin_version","")])
+            w.writerow(["date", "user", "order", "verdict", "rejection_reason", "timestamp_utc", "plugin_version"])
+            for e in data.get("events", []): w.writerow([(e.get("ts") or "")[:10], e.get("user",""), e.get("order",""), e.get("verdict",""), event_reason(e), e.get("ts",""), e.get("plugin_version","")])
             return self._send(200, out.getvalue().encode(), "text/csv", "dqc_usage.csv")
         except Exception as e: return self._json(500, {"error": str(e)[:200]})
 
@@ -118,9 +126,9 @@ class H(http.server.SimpleHTTPRequestHandler):
             from openpyxl.styles import Font, PatternFill
             data = self._fetch_dqc(); events = data.get("events", []); summary = data.get("summary", {})
             wb = Workbook(); ws = wb.active; ws.title = "Runs"
-            headers = ["date", "user", "order", "verdict", "timestamp_utc", "plugin_version"]
+            headers = ["date", "user", "order", "verdict", "rejection_reason", "timestamp_utc", "plugin_version"]
             ws.append(headers)
-            for e in events: ws.append([(e.get("ts") or "")[:10], e.get("user",""), e.get("order",""), e.get("verdict",""), e.get("ts",""), e.get("plugin_version","")])
+            for e in events: ws.append([(e.get("ts") or "")[:10], e.get("user",""), e.get("order",""), e.get("verdict",""), event_reason(e), e.get("ts",""), e.get("plugin_version","")])
             ws2 = wb.create_sheet("Summary"); ws2.append(["metric", "value"]); ws2.append(["total_audits", summary.get("total_audits", 0)]); ws2.append(["PASSED", summary.get("verdicts",{}).get("PASSED",0)]); ws2.append(["REJECTED", summary.get("verdicts",{}).get("REJECTED",0)]); ws2.append([]); ws2.append(["user", "audit_count"])
             for u,c in sorted(summary.get("users",{}).items(), key=lambda x: -x[1]): ws2.append([u,c])
             for sheet in (ws, ws2):

@@ -1235,7 +1235,7 @@ async function doRefresh(){{var b=document.getElementById('refresh-btn'),m=docum
     </div>
     <div class="card">
       <h3 class="section-title">All DQC Runs</h3>
-      <table><thead><tr><th>Date</th><th>User</th><th>Order</th><th>Verdict</th><th>Plugin Version</th><th>Timestamp UTC</th></tr></thead><tbody id="dqcRunBody"><tr><td colspan="6">Loading…</td></tr></tbody></table>
+      <table><thead><tr><th>Date</th><th>User</th><th>Order</th><th>Verdict</th><th>Rejection Reason</th><th>Plugin Version</th><th>Timestamp UTC</th></tr></thead><tbody id="dqcRunBody"><tr><td colspan="7">Loading…</td></tr></tbody></table>
     </div>
   </section>
 
@@ -1325,8 +1325,9 @@ async function loadDqcUsage() {{
     document.getElementById('dqcUserBody').innerHTML = users.length ? users.map(function(x) {{ return '<tr><td>' + x[0] + '</td><td class="right">' + x[1].toLocaleString() + '</td></tr>'; }}).join('') : '<tr><td colspan="2">No users</td></tr>';
     document.getElementById('dqcRunBody').innerHTML = ev.length ? ev.map(function(e) {{
       var verdict = e.verdict || 'UNKNOWN';
-      return '<tr><td>' + ((e.ts || '').slice(0,10)) + '</td><td>' + (e.user || '') + '</td><td>' + (e.order || '') + '</td><td><strong>' + verdict + '</strong></td><td>' + (e.plugin_version || '') + '</td><td>' + (e.ts || '') + '</td></tr>';
-    }}).join('') : '<tr><td colspan="6">No audits logged</td></tr>';
+      var reason = e.rejection_reason || e.reject_reason || e.reason || e.failure_reason || e.qc_reason || e.notes || e.message || '';
+      return '<tr><td>' + ((e.ts || '').slice(0,10)) + '</td><td>' + (e.user || '') + '</td><td>' + (e.order || '') + '</td><td><strong>' + verdict + '</strong></td><td>' + reason + '</td><td>' + (e.plugin_version || '') + '</td><td>' + (e.ts || '') + '</td></tr>';
+    }}).join('') : '<tr><td colspan="7">No audits logged</td></tr>';
   }} catch(e) {{
     msg.innerHTML = '<span style="color:#b42318;font-weight:700">' + e.message + '</span>';
   }}
