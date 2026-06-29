@@ -1362,10 +1362,11 @@ async function loadDqcUsage() {{
     var ev = d.events || [];
     var vc = {{PASSED:0, REJECTED:0, UNKNOWN:0}};
     var uc = {{}};
+    function dqcUser(e) {{ return e.display_user || e.windows_login || e.windows_user || e.windows_username || e.login_name || e.username || e.user || '(unknown)'; }}
     ev.forEach(function(e) {{
       var v = (e.verdict || 'UNKNOWN').toUpperCase();
       vc[v] = (vc[v] || 0) + 1;
-      var u = e.user || '(unknown)';
+      var u = dqcUser(e);
       uc[u] = (uc[u] || 0) + 1;
     }});
     document.getElementById('dqcTotal').textContent = ev.length.toLocaleString();
@@ -1378,7 +1379,7 @@ async function loadDqcUsage() {{
     document.getElementById('dqcRunBody').innerHTML = ev.length ? ev.map(function(e) {{
       var verdict = e.verdict || 'UNKNOWN';
       var reason = e.rejection_reason || e.reject_reason || e.reason || e.failure_reason || e.qc_reason || e.notes || e.message || '—';
-      return '<tr><td>' + ((e.ts || '').slice(0,10)) + '</td><td>' + (e.user || '') + '</td><td>' + (e.order || '') + '</td><td><strong>' + verdict + '</strong></td><td>' + reason + '</td><td>0.5.5</td><td>' + (e.ts || '') + '</td></tr>';
+      return '<tr><td>' + ((e.ts || '').slice(0,10)) + '</td><td>' + dqcUser(e) + '</td><td>' + (e.order || '') + '</td><td><strong>' + verdict + '</strong></td><td>' + reason + '</td><td>0.5.5</td><td>' + (e.ts || '') + '</td></tr>';
     }}).join('') : '<tr><td colspan="7">No audits logged</td></tr>';
   }} catch(e) {{
     msg.innerHTML = '<span style="color:#b42318;font-weight:700">' + e.message + '</span>';
