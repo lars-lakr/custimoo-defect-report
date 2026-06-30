@@ -941,6 +941,8 @@ def build_period_payload(key, display_name):
     ords = [total_monthly.get(m, {}).get('orders', 0) for m in mkeys]
     defs = [monthly_defects.get(m, 0) for m in mkeys]
     def_orders = [defect_order_count.get(m, 0) for m in mkeys]
+    remake_orders = [remake_by_month.get(m, {}).get('orders', 0) for m in mkeys]
+    remake_qty = [remake_by_month.get(m, {}).get('qty', 0) for m in mkeys]
     rates = [round(defs[i] / vol[i] * 100, 2) if vol[i] > 0 else 0 for i in range(len(mkeys))]
     total_vol = sum(vol); total_orders_p = sum(ords); total_defs = sum(defs); total_def_orders = sum(def_orders)
     rows = factory_rows_for_months(mkeys)
@@ -958,6 +960,8 @@ def build_period_payload(key, display_name):
             po = [total_monthly.get(m,{}).get('orders',0) for m in pm]
             pd2 = [monthly_defects.get(m,0) for m in pm]
             pdo = [defect_order_count.get(m,0) for m in pm]
+            pro = [remake_by_month.get(m,{}).get('orders',0) for m in pm]
+            prq = [remake_by_month.get(m,{}).get('qty',0) for m in pm]
             pr = [round(pd2[i]/pv[i]*100,2) if pv[i]>0 else 0 for i in range(len(pm))]
             total_v = sum(pv); total_o = sum(po); total_d = sum(pd2); total_do = sum(pdo)
             prev = {
@@ -965,6 +969,7 @@ def build_period_payload(key, display_name):
                 'monthKeys': pm,
                 'monthlyVolume': pv, 'monthlyRate': pr,
                 'monthlyDefects': pd2, 'monthlyOrders': po, 'monthlyDefectOrders': pdo,
+                'monthlyRemakeOrders': pro, 'monthlyRemakeQty': prq,
                 'totalVolume': total_v, 'totalOrders': total_o,
                 'totalDefects': total_d, 'totalDefectOrders': total_do,
                 'totalRate': round(total_d/total_v*100,2) if total_v>0 else 0,
@@ -975,6 +980,7 @@ def build_period_payload(key, display_name):
     return {
         'key': key, 'name': display_name, 'label': period_label(mkeys), 'monthKeys': mkeys, 'months': labels,
         'monthlyVolume': vol, 'monthlyOrders': ords, 'monthlyDefects': defs, 'monthlyDefectOrders': def_orders, 'monthlyRate': rates,
+        'monthlyRemakeOrders': remake_orders, 'monthlyRemakeQty': remake_qty,
         'totalVolume': total_vol, 'totalOrders': total_orders_p, 'totalDefects': total_defs, 'totalDefectOrders': total_def_orders,
         'totalRate': round(total_defs / total_vol * 100, 2) if total_vol > 0 else 0,
         'totalOrderRate': round(total_def_orders / total_orders_p * 100, 2) if total_orders_p > 0 else 0,
