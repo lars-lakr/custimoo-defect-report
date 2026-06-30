@@ -844,7 +844,7 @@ def factory_rows_for_months(month_keys):
             'rate': round(defect / vol * 100, 2) if vol > 0 else 0,
             'order_rate': round(defect_orders / ords * 100, 2) if ords > 0 else 0,
             'qarma': qstats.get(fd['name'], qarma_empty()),
-            'monthly': {'volumes': vols, 'defects': defs, 'orders': orders, 'defect_orders': def_orders}
+            'monthly': {'volumes': vols, 'defects': defs, 'orders': orders, 'defect_orders': def_orders, 'remake_qty': remake_qty, 'remake_orders': remake_orders}
         })
     rows.sort(key=lambda x: -x['rate'])
     return rows
@@ -1785,7 +1785,7 @@ const chartBaseOptions = {{
   interaction: {{ mode: 'index', intersect: false }},
   plugins: {{ legend: {{ position: 'bottom' }} }},
   scales: {{
-    y: {{ beginAtZero: true, title: {{ display: true, text: 'Total Order QTY' }} }},
+    y: {{ beginAtZero: true, title: {{ display: true, text: 'Remake QTY' }} }},
     y1: {{ beginAtZero: true, position: 'right', grid: {{ drawOnChartArea: false }}, title: {{ display: true, text: 'Error %' }} }}
   }}
 }};
@@ -1796,7 +1796,7 @@ let currentTrendFactory = null;
 function buildTrendDatasets(factoryName) {{
   if (!factoryName) {{
     const ds = [
-      {{ type: 'bar', label: 'Total Order QTY', data: ACTIVE_DATA.monthlyVolume, backgroundColor: 'rgba(31, 111, 235, 0.25)', borderColor: 'rgba(31, 111, 235, 0.8)', borderWidth: 1, yAxisID: 'y' }},
+      {{ type: 'bar', label: 'Remake QTY', data: ACTIVE_DATA.monthlyRemakeQty || [], backgroundColor: 'rgba(124, 58, 237, 0.25)', borderColor: 'rgba(124, 58, 237, 0.8)', borderWidth: 1, yAxisID: 'y' }},
       {{ type: 'line', label: 'Err% (Qty)', data: ACTIVE_DATA.monthlyRate, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.25, yAxisID: 'y1' }}
     ];
     return ds;
@@ -1804,17 +1804,18 @@ function buildTrendDatasets(factoryName) {{
   const fd = (ACTIVE_DATA.factories || []).find(function(x) {{ return x.name === factoryName; }});
   if (!fd) return [];
   const vols = (fd.monthly && fd.monthly.volumes) || [];
+  const remakeQty = (fd.monthly && fd.monthly.remake_qty) || [];
   const defs = (fd.monthly && fd.monthly.defects) || [];
   const rates = vols.map(function(v, i) {{ return v > 0 ? +(defs[i] / v * 100).toFixed(2) : 0; }});
   return [
-    {{ type: 'bar', label: factoryName + ' Total Order QTY', data: vols, backgroundColor: 'rgba(31, 111, 235, 0.25)', borderColor: 'rgba(31, 111, 235, 0.8)', borderWidth: 1, yAxisID: 'y' }},
+    {{ type: 'bar', label: factoryName + ' Remake QTY', data: remakeQty, backgroundColor: 'rgba(124, 58, 237, 0.25)', borderColor: 'rgba(124, 58, 237, 0.8)', borderWidth: 1, yAxisID: 'y' }},
     {{ type: 'line', label: factoryName + ' Err% (Qty)', data: rates, borderColor: FACTORY_COLORS[factoryName] || '#ef4444', backgroundColor: FACTORY_COLORS[factoryName] || '#ef4444', tension: 0.25, yAxisID: 'y1' }}
   ];
 }}
 
 function renderTrendChart(factoryName) {{
   currentTrendFactory = factoryName || null;
-  document.getElementById('trendTitle').textContent = factoryName ? ('Monthly Trend — ' + factoryName) : 'Monthly Trend — All Factories';
+  document.getElementById('trendTitle').textContent = factoryName ? ('Monthly Remake QTY Trend — ' + factoryName) : 'Monthly Remake QTY Trend — All Factories';
   document.getElementById('resetBtn').style.display = factoryName ? 'inline-block' : 'none';
   document.getElementById('trendBar').style.display = factoryName ? 'flex' : 'none';
   if (factoryName) {{
