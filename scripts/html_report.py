@@ -1377,7 +1377,7 @@ async function doRefresh(){{var b=document.getElementById('refresh-btn'),m=docum
       <div class="card metric"><div class="label">3-Month Rolling Error Rate</div><div class="value" id="rollingRate"></div><div class="sub" id="rollingSub"></div></div>
       <div class="card metric"><div class="label" id="selectedRateLabel">Selected Period Error Rate</div><div class="value" id="totalRate"></div><div class="sub" id="totalSub"></div></div>
     </div>
-    <div class="card metric"><div class="label">2026 Goal — Remake Order Error Rate</div><div class="value">0.50%</div><div class="sub" id="goalSub">Goal for 2026: keep remake orders at or below 0.5% of total orders.</div></div>
+    <div class="card metric"><div class="label">2026 Goal — Remake QTY Error Rate</div><div class="value" id="goalRate">0.50%</div><div class="sub" id="goalSub">Goal for 2026: ≤0.50% remake-qty error rate.</div></div>
     <div class="card">
       <div class="section-head"><h3 class="section-title" id="breakdownTitle">Error Rate Breakdown — Factories</h3><div style="display:flex;align-items:center;gap:8px;margin:0"><label for="periodFilter" class="muted" style="font-size:13px;font-weight:700">Period:</label><select id="periodFilter" class="filter-select"><option value="all">All</option><option value="last_3">Last 3 months</option><option value="last_6">Last 6 months</option><option value="last_month">Last month</option><option value="mtd">MTD</option><option value="ytd">YTD</option><option value="quarter">Quarter</option></select><label for="measureFilter" class="muted" style="font-size:13px;font-weight:700">Measure:</label><select id="measureFilter" class="filter-select"><option value="qty">Qty</option><option value="orders">No of Orders</option></select><label for="breakdownFilter" class="muted" style="font-size:13px;font-weight:700">Filter:</label><select id="breakdownFilter" class="filter-select"><option value="all">All</option><option value="factory">Factories</option><option value="sku">SKU</option><option value="sport">Sports</option><option value="category">Category</option><option value="admin">Order Admin</option></select></div></div>
       <div class="hint" id="breakdownHint">Factory view shows FU customer feedback only. Physical QC measures are temporarily hidden while the data is being reviewed.</div>
@@ -1669,7 +1669,7 @@ function updateSummaryStats() {{
   const ytdRate = (ytdAgg.volume || 0) > 0 ? ((ytdAgg.remake_qty || 0) / ytdAgg.volume * 100) : 0;
   const gap = ytdRate - 0.5;
   const goalText = gap <= 0 ? 'On target' : (gap.toFixed(2) + ' percentage points above goal');
-  document.getElementById('goalSub').textContent = 'Goal for 2026: ≤0.50% remake-order error rate. Current YTD: ' + ytdRate.toFixed(2) + '% (' + (ytdAgg.remake_qty || 0).toLocaleString() + ' remake qty / ' + (ytdAgg.volume || 0).toLocaleString() + ' total order qty) · ' + goalText;
+  document.getElementById('goalSub').textContent = 'Goal for 2026: ≤0.50% remake-qty error rate. Current YTD: ' + ytdRate.toFixed(2) + '% (' + (ytdAgg.remake_qty || 0).toLocaleString() + ' remake qty / ' + (ytdAgg.volume || 0).toLocaleString() + ' total order qty) · ' + goalText;
 }}
 
 function leaderRank(i) {{ return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1); }}
