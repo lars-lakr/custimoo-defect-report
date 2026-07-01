@@ -608,7 +608,7 @@ def windows_login_from_email(email, fallback='(unknown)'):
         return fb.split('@', 1)[0].lower()
     return fb or '(unknown)'
 
-# Build per-order SKU text, admin login, and designer login for all backend orders in report window.
+# Build per-order SKU text, admin login, and Digital QC user login for all backend orders in report window.
 cur.execute("""
 SELECT o.order_no, CAST(JSON_EXTRACT(o.price_info, '$.total_quantity') AS SIGNED) AS qty,
        oi.status_updated_at AS shipping_date,
@@ -1256,8 +1256,8 @@ async function doRefresh(){{var b=document.getElementById('refresh-btn'),m=docum
           <table><thead><tr><th>Rank</th><th>Order Admin</th><th class="right">Exception Rate</th><th class="right">Remake Orders</th><th class="right">Total Orders</th></tr></thead><tbody id="adminLeadersBody"></tbody></table>
         </div>
         <div>
-          <h4 style="margin:0 0 10px">🏆 Designers</h4>
-          <table><thead><tr><th>Rank</th><th>Designer</th><th class="right">Exception Rate</th><th class="right">Remake Orders</th><th class="right">Total Orders</th></tr></thead><tbody id="designerLeadersBody"></tbody></table>
+          <h4 style="margin:0 0 10px">🏆 Digital QC Users</h4>
+          <table><thead><tr><th>Rank</th><th>Digital QC User</th><th class="right">Exception Rate</th><th class="right">Remake Orders</th><th class="right">Total Orders</th></tr></thead><tbody id="designerLeadersBody"></tbody></table>
         </div>
       </div>
     </div>
@@ -1546,7 +1546,7 @@ function renderExceptionLeaders() {{
   const label = d.label || ((d.months || [])[0] + ' – ' + (d.months || [])[(d.months || []).length - 1]);
   document.getElementById('exceptionLeadersSub').textContent = 'Selected period: ' + (d.name || 'Selected period') + ' · ' + label + ' · exception rate = remake orders / total orders. Minimum volume is applied before ranking.';
   document.getElementById('adminLeadersBody').innerHTML = renderLeaderRows(leaders.admin || [], 'order admins');
-  document.getElementById('designerLeadersBody').innerHTML = renderLeaderRows(leaders.designer || [], 'designers');
+  document.getElementById('designerLeadersBody').innerHTML = renderLeaderRows(leaders.designer || [], 'Digital QC users');
 }}
 
 
